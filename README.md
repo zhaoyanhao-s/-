@@ -16,7 +16,7 @@
 
 ## 编译环境和依赖
 
-Windows vs2019 + qt 6.3.0 + qmake
+Windows11 vs2019 + qt 6.3.0 + qmake
 
 QT应该包含这两个核心组件
 
