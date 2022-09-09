@@ -5,8 +5,8 @@
 // 而且我们应该先从父节点开始判断，如果其不在父节点中，那么他的所有子节点就不用在判断了
 
 //抛弃不可能的碰撞 即 矩形下边缘 > -1.1
-bool abortTesting(const float& z) {
-    return (z > -1.1);
+bool abortTesting(const float& zdown,const float& zup) {
+    return (zdown > zup);
 }
 
 
@@ -65,7 +65,7 @@ bool getCollisionAABB(const Cuboid& octree, const Cuboid& robot) {
 //但是对于长方形这种简单的凸多边形，利用投影法则就可以完成了
 bool getCollisionProject(Point* p,const Cuboid& robot) {
     //抛弃z方向上不可能的点
-    if (p->m_z > -1.1) return false;
+    if (p->m_z > robot.m_center.m_z+robot.m_halfheight) return false;
     //矩形中心和点的连线矢量
     Point vec1 = (*p) - robot.m_center;
     //在机器人正方向上的投影
@@ -88,7 +88,7 @@ void getCollisionOctreeNode(OctreeNode* node, const Cuboid& robot) {
     if (node == nullptr)
         return;
 
-    if (abortTesting(node->m_center[2] - node->m_halfheight))   //z轴不合适，直接扔
+    if (abortTesting(node->m_center[2] - node->m_halfheight,robot.m_center.m_z+robot.m_halfheight) )  //z轴不合适，直接扔
         return;
 
     if (getCollisionAABB(*node,robot)) {
@@ -109,6 +109,7 @@ bool getCollisionPoint(const std::vector<OctreeNode*>& collisionnode, const Cubo
     //所有碰撞的节点
     for (const auto& num : collisionnode) {
         //该节点上的所有点
+        Point* realhead = num->m_pointslist;
         while (num->m_pointslist != nullptr) {
             if (getCollisionProject(num->m_pointslist, robot)) {
                 target = true;
@@ -116,6 +117,7 @@ bool getCollisionPoint(const std::vector<OctreeNode*>& collisionnode, const Cubo
             }
             num->m_pointslist = num->m_pointslist->m_next;
         }
+        num->m_pointslist = realhead;
     }
     return target;
 }
