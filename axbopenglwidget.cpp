@@ -1,4 +1,4 @@
-﻿#include "axbopenglwidget.h"
+#include "axbopenglwidget.h"
 #include "octree.h"
 #include "function.h"
 #include "mytimer.h"
@@ -56,7 +56,6 @@ float vertices[36][3] = {
 {-0.5f, 0.5f, 0.5f},
 {-0.5f, 0.5f, -0.5f}
 };
-float robot_maxt[36][3] = {};
 
 AXBOpenGLWidget::AXBOpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 {
@@ -95,7 +94,7 @@ AXBOpenGLWidget::AXBOpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
     space.m_axeY = { 0.f, 1.f, 0.f };
     space.m_axeZ = { 0.f, 0.f, 1.f };
     //建立一颗八叉树
-    OctreeNode* octree = OctreeNode::BuildOctree(space.m_center, space.m_halflength, space.m_halfwidth, space.m_halfheight, 4);
+    OctreeNode* octree = OctreeNode::BuildOctree(space.m_center, space.m_halflength, space.m_halfwidth, space.m_halfheight, 5);
     CELLTimestamp timer;
     CELLTimestamp timer3;
     CELLTimestamp timer2;
@@ -125,47 +124,121 @@ AXBOpenGLWidget::AXBOpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
 
    std::cout << "Insert consume time = " << timer_answer << "ms" << std::endl;
 
-    //产生机器人
+    //产生机器人的三个部件
     Cuboid robot;
+    Cuboid robot2;
+    Cuboid robot3;
 
     robot.m_center = { 0.f, 0.f, 0.f };
+
     // 设置机器人大小
-    robot.m_halflength = 0.5f;
-    robot.m_halfwidth = 0.25f;
-    robot.m_halfheight = 0.2f;
+    robot.m_halflength = 0.2f;
+    robot.m_halfwidth = 0.6f;
+    robot.m_halfheight = 0.75f;
+
+    robot2.m_halflength = 0.75f;
+    robot2.m_halfwidth = 0.15f;
+    robot2.m_halfheight = 0.05f;
+
+    robot3.m_halflength = 0.75f;
+    robot3.m_halfwidth = 0.15f;
+    robot3.m_halfheight = 0.05f;
 
     // 设置机器人方向
     robot.m_axeX = { 1.f, 0.f, 0.f };
     robot.m_axeY = { 0.f, 1.f, 0.f };
     robot.m_axeZ = { 0.f, 0.f, 1.f };
     robot.m_R2 = robot.m_halflength * robot.m_halflength + robot.m_halfwidth * robot.m_halfwidth;
-
+    robot2.m_axeX = { 1.f, 0.f, 0.f };
+    robot2.m_axeY = { 0.f, 1.f, 0.f };
+    robot2.m_axeZ = { 0.f, 0.f, 1.f };
+    robot2.m_R2 = robot2.m_halflength * robot2.m_halflength + robot2.m_halfwidth * robot2.m_halfwidth;
+    robot3.m_axeX = { 1.f, 0.f, 0.f };
+    robot3.m_axeY = { 0.f, 1.f, 0.f };
+    robot3.m_axeZ = { 0.f, 0.f, 1.f };
+    robot3.m_R2 = robot3.m_halflength * robot3.m_halflength + robot3.m_halfwidth * robot3.m_halfwidth;
 
     for (int i = 0; i < 1; ++i) {
         float maxdelta = pow(robot.m_halflength * robot.m_halflength + robot.m_halfwidth * robot.m_halfwidth, 0.5);
         //随机在空间中产生位置
         robot.m_center.m_x = static_cast<float>(((rand() % (int)((space.m_halflength - maxdelta) * 200)) + maxdelta * 100 - space.m_halflength * 100)) / 100;//根据需要设置除数
         robot.m_center.m_y = static_cast<float>(((rand() % (int)((space.m_halfwidth - maxdelta) * 200)) + maxdelta * 100 - space.m_halfwidth * 100)) / 100;
-#ifdef DEBUG
-        std::cout << "robot [x] ; " << robot.m_center.m_x << std::endl;
-        std::cout << "robot [y] ; " << robot.m_center.m_y << std::endl;
-#endif // DEBUG
-        robot.m_center.m_z = -1.3f;
-        QVector3D point{robot.m_center.m_x,robot.m_center.m_y, robot.m_center.m_z};
-        cameraTarget = point;
-        //插入opengl中
-        cubePositions.push_back(point);
+
+        robot.m_center.m_z = -0.75f;
+        robot2.m_center.m_z = -1.45f;
+        robot3.m_center.m_z = -1.45f;
+
+//        QVector3D point{robot.m_center.m_x,robot.m_center.m_y, robot.m_center.m_z};
+//        QVector3D point2{robot2.m_center.m_x,robot2.m_center.m_y, robot2.m_center.m_z};
+//        QVector3D point3{robot3.m_center.m_x,robot3.m_center.m_y, robot3.m_center.m_z};
+//        //插入opengl中
+//        robotcenter.push_back(point);
+//        robotcenter.push_back(point2);
+//        robotcenter.push_back(point3);
+
+        //计算tan
+        float r = (robot.m_halfwidth  - robot2.m_halfwidth)/(robot.m_halflength + robot2.m_halflength);
+        //计算角度
+        float b = atan(r);
+        //计算两个中心点之间的模长
+        float m = pow((robot.m_halfwidth  - robot2.m_halfwidth)*(robot.m_halfwidth  - robot2.m_halfwidth)+\
+                      (robot.m_halflength + robot2.m_halflength)*(robot.m_halflength + robot2.m_halflength),0.5);
+
         //随机产生角度
         float rotation = static_cast<float>(rand() % 3000) / 1000;
-        m_rotation = rotation/3.14*180;
+        m_rotation = rotation/PI*180;
         robot.setAxe(rotation);
+        robot2.setAxe(rotation);
+        robot3.setAxe(rotation);
+
+        robot2.m_center.m_x = robot.m_center.m_x + m*cos(b+rotation);
+        robot2.m_center.m_y = robot.m_center.m_y + m*sin(b+rotation);
+        robot3.m_center.m_x = robot.m_center.m_x + m*cos(-b+rotation);
+        robot3.m_center.m_y = robot.m_center.m_y + m*sin(-b+rotation);
+#ifdef DEBUG
+        std::cout << "robot [x] = " << robot.m_center.m_x << std::endl;
+        std::cout << "robot [y] = " << robot.m_center.m_y << std::endl;
+        std::cout << "robot [x] = " << robot2.m_center.m_x << std::endl;
+        std::cout << "robot [y] = " << robot2.m_center.m_y << std::endl;
+        std::cout << "robot [x] = " << robot3.m_center.m_x << std::endl;
+        std::cout << "robot [y] = " << robot3.m_center.m_y << std::endl;
+#endif // DEBUG
+
+        robotcenter.push_back(robot);
+        robotcenter.push_back(robot2);
+        robotcenter.push_back(robot3);
+
 #ifdef DEBUG
         std::cout << "robot[rotation] = " << rotation << std::endl;
 #endif // DEBUG
+
         //测试
         timer2.update();
         getCollisionOctreeNode(octree, robot);
         timer_part += timer2.getElapsedTimeInMilliSec();
+#ifdef DEBUG
+        for (int i = 0; i < collisionnode.size(); ++i) {
+            int c = 0;
+            Point* real = collisionnode[i]->m_pointslist;
+            while (collisionnode[i]->m_pointslist != nullptr)
+            {
+                collisionnode[i]->m_pointslist = collisionnode[i]->m_pointslist->m_next;
+                ++c;
+            }
+            collisionnode[i]->m_pointslist = real;
+            std::cout << "collisionnode[" << i << "] = " << c << std::endl;
+        }
+#endif //DEBUG
+
+        timer3.update();
+        getCollisionPoint(collisionnode, robot);
+        timer_point += timer3.getElapsedTimeInMilliSec();
+        collisionnode.clear();
+
+        timer2.update();
+        getCollisionOctreeNode(octree, robot2);
+        timer_part += timer2.getElapsedTimeInMilliSec();
+#ifdef DEBUG
         for (int i = 0; i < collisionnode.size(); ++i) {
             int c = 0;
             Point* real = collisionnode[i]->m_pointslist;
@@ -178,10 +251,33 @@ AXBOpenGLWidget::AXBOpenGLWidget(QWidget *parent) : QOpenGLWidget(parent)
             std::cout << "collisionnode[" << i << "] = " << c << std::endl;
         }
 
+#endif //DEBUG
         timer3.update();
-        getCollisionPoint(collisionnode, robot);
+        getCollisionPoint(collisionnode, robot2);
         timer_point += timer3.getElapsedTimeInMilliSec();
+        collisionnode.clear();
 
+        timer2.update();
+        getCollisionOctreeNode(octree, robot3);
+        timer_part += timer2.getElapsedTimeInMilliSec();
+#ifdef DEBUG
+        for (int i = 0; i < collisionnode.size(); ++i) {
+            int c = 0;
+            Point* real = collisionnode[i]->m_pointslist;
+            while (collisionnode[i]->m_pointslist != nullptr)
+            {
+                collisionnode[i]->m_pointslist = collisionnode[i]->m_pointslist->m_next;
+                ++c;
+            }
+            collisionnode[i]->m_pointslist = real;
+            std::cout << "collisionnode[" << i << "] = " << c << std::endl;
+        }
+
+#endif //DEBUG
+        timer3.update();
+        getCollisionPoint(collisionnode, robot3);
+        timer_point += timer3.getElapsedTimeInMilliSec();
+        collisionnode.clear();
         //if (getCollisionPoint(collisionnode, robot))
         //    std::cout << "Collision!!!" << std::endl;
         //else std::cout << "No collision." << std::endl;
@@ -304,14 +400,8 @@ void AXBOpenGLWidget::paintGL()
     //视角变化，实现视角的变换，决定相机放置的位置，这个也是内部算法帮我们处理了
     QMatrix4x4 view;
 
-
     //视角设置   相机位置   相机目标点               辅助叉乘向量
     view.lookAt(cameraPos, cameraPos+cameraFront,QVector3D(0.0, 1.0, 0.0));
-
-
-
-
-
 
     //背景绘制
     glClearColor(0.f, 0.f, 0.f, 1.0f);
@@ -331,7 +421,7 @@ void AXBOpenGLWidget::paintGL()
     case ALL:
         shaderProgram.setUniformValue("view", view);
         //这些是点，最后一个是机器人
-        for (int i = 0; i < cubePositions.size()-1; ++i) {
+        for (int i = 0; i < cubePositions.size(); ++i) {
             //标准化
             QVector4D color;
             model.setToIdentity();
@@ -347,55 +437,70 @@ void AXBOpenGLWidget::paintGL()
             glDrawArrays(GL_TRIANGLES,0,36);
         }
         //绘制机器人
-        model.setToIdentity();
 
 
-        //位移
-        model.translate(cubePositions[cubePositions.size()-1]);
-        //旋转
-        model.rotate(m_rotation,0,0,1);
-        //缩放
-        model.scale(1.f,0.5f,0.4f);
+        for(int i = 0; i < robotcenter.size(); ++i)
+        {
+            model.setToIdentity();
+            //位移
+            QVector3D trans {robotcenter[i].m_center.m_x,robotcenter[i].m_center.m_y,robotcenter[i].m_center.m_z};
+            model.translate(trans);
+            //旋转
+            model.rotate(m_rotation,0,0,1);
+            //缩放
+            model.scale(robotcenter[i].m_halflength*2,robotcenter[i].m_halfwidth*2,robotcenter[i].m_halfheight*2);
 
-        shaderProgram.setUniformValue("model",model);
-        robot = {255.f,255.f,255.f,1.0f};
-        shaderProgram.setUniformValue("color",robot);
-        glDrawArrays(GL_TRIANGLES,0,36);
+            shaderProgram.setUniformValue("model",model);
+            robot = {255.f,255.f,255.f,1.0f};
+            shaderProgram.setUniformValue("color",robot);
+            glDrawArrays(GL_TRIANGLES,0,36);
+        }
 
         break;
     case COLLISION:
         for(int i = 0; i < ansset.size(); ++i){
             QVector4D color;
             model.setToIdentity();
+
+
             //位移
             model.translate(ansset[i]);
+            //缩放
+            model.scale(0.01f,0.01f,0.01f);
 
             //旋转 角度制, 角度，和旋转轴，对本例来说，旋转轴设计成 z 轴即可
             //model.rotate(0.0f, 0.0f, 0.0f,1.0f);
-            //缩放
-            model.scale(0.01f,0.01f,0.01f);
+
             shaderProgram.setUniformValue("model", model);
             color = {255,255,0,1};
             shaderProgram.setUniformValue("color",color);
             glDrawArrays(GL_TRIANGLES,0,36);
-            std::cout<<"has insert ansset"<<std::endl;
+            //std::cout<<"has insert ansset"<<std::endl;
         }
         //绘制机器人
-        model.setToIdentity();
 
 
-        //位移
-        model.translate(cubePositions[cubePositions.size()-1]);
-        //旋转
-        model.rotate(m_rotation,0,0,1);
-        //缩放
-        model.scale(1.f,0.5f,0.4f);
 
-        shaderProgram.setUniformValue("model",model);
-        robot = {255.f,255.f,255.f,1.0f};
-        shaderProgram.setUniformValue("color",robot);
-        glDrawArrays(GL_TRIANGLES,0,36);
+        for(int i = 0; i < robotcenter.size(); ++i)
+        {
+            model.setToIdentity();
+            //位移
+            QVector3D trans {robotcenter[i].m_center.m_x,robotcenter[i].m_center.m_y,robotcenter[i].m_center.m_z};
+            model.translate(trans);
+            //旋转
+            model.rotate(m_rotation,0,0,1);
+            //缩放
+            model.scale(robotcenter[i].m_halflength*2,robotcenter[i].m_halfwidth*2,robotcenter[i].m_halfheight*2);
 
+
+
+
+
+            shaderProgram.setUniformValue("model",model);
+            robot = {255.f,255.f,255.f,1.0f};
+            shaderProgram.setUniformValue("color",robot);
+            glDrawArrays(GL_TRIANGLES,0,36);
+        }
     default:
         break;
     }
