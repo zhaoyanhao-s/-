@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/shaders">
+        <file>shapes.frag</file>
+        <file>shapes.vert</file>
+        <file>robot.frag</file>
+    </qresource>
+    <qresource prefix="/images"/>
+</RCC>
