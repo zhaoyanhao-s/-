@@ -6,7 +6,7 @@
 extern std::vector<OctreeNode*> collisionnode;
 extern std::unordered_set<Point*> results;
 
-bool abortTesting(const float& z);
+bool abortTesting(const float& zdown,const float& zup);
 bool getSeparatingPlane(const Point& RPos, const Point& Plane, const Cuboid& box1, const Cuboid& box2);
 bool getCollision(const Cuboid& box1, const Cuboid& box2);
 bool getCollisionAABB(const Cuboid& octree, const Cuboid& robot);
