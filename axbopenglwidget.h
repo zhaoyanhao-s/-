@@ -1,7 +1,8 @@
-﻿#ifndef AXBOPENGLWIDGET_H
+#ifndef AXBOPENGLWIDGET_H
 #define AXBOPENGLWIDGET_H
 
 
+#include "cuboid.h"
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
@@ -40,6 +41,7 @@ private:
     QOpenGLTexture * textureSmall;
     std::vector<QVector3D> cubePositions; //没有碰撞的点的集合
     std::vector<QVector3D> ansset;        //发生碰撞的点的集合
+    std::vector<Cuboid> robotcenter;   //机器人部件的中心
 
     //相机设置
     QVector3D cameraPos;
